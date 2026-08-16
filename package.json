@@ -1,0 +1,44 @@
+{
+  "name": "@beiyege-01/dsh-voice-ai-girlfriend",
+  "version": "0.1.0",
+  "description": "Voice AI girlfriend for DeepSeek Harness: FunASR mic input, Qwen3-TTS voice replies, companion animation window, QQ two-way chat. Needs the repo's voice bridge + NapCat.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "prepare": "node build.mjs"
+  },
+  "files": [
+    "lib/",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.0.0",
+    "@types/react": "~18.3.1"
+  },
+  "license": "MIT"
+}
