@@ -2,6 +2,8 @@
 
 DeepSeek Harness 的**浏览器语音插件**：麦克风语音输入、回复朗读（TTS）、AI 女友动画窗、QQ 双向对话。
 
+> ✅ **已适配 DSH rc.8（当前主线）**：`dsh.bundle` manifest + `conversation.input.dock/left` 槽位按 rc.8 协议实现；含数字人（DUIX）控制、DeepSeek 余额 badge（stats 行）、五态麦克风。`dsh plugin add` 即可安装。
+
 > ⚠️ **本插件是完整方案的一部分**：语音识别/合成依赖配套的 **voice bridge**（Python 服务，whisper/FunASR + Qwen3-TTS），QQ 对话依赖 **NapCatQQ**。请配合完整仓库使用：**[beiyege-01/dsh-voice-ai-girlfriend](https://github.com/beiyege-01/dsh-voice-ai-girlfriend)**（含桥接代码、模型准备、一键启动脚本、安装文档）。
 
 ## 安装
