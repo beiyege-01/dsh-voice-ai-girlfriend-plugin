@@ -59,25 +59,32 @@ function nodeText(data: AssistantChatData): string {
 }
 
 /**
- * Whether an assistant node is a plain chat reply (as opposed to agent
- * working output): the nearest PRECEDING non-assistant node must be a USER
- * node. A reply that follows a tool-call (or steering/context) is agent
- * tooling noise — it should never feed DUIX/QQ voice.
+ * Whether an assistant node belongs to a plain chat TURN (as opposed to an
+ * agent working turn): a turn runs from one USER node to the next, and if ANY
+ * tool-call node falls inside that interval the whole turn is agent work —
+ * its text (pre-tool preamble, post-tool summary, reasoning-flavored copy)
+ * is never a chat reply and must not feed DUIX/QQ voice. A turn with no
+ * tool-call is a plain chat reply.
  */
-function isChatReply(
+function isPlainChatTurn(
   snapshot: { chat: { nodes: { values(): readonly { kind: string; anchorSeq: number }[] } } },
   anchor: number,
 ): boolean {
-  let nearestSeq = -1
-  let nearestKind = ''
+  let prevUser = -1
+  let nextUser = Infinity
   for (const node of snapshot.chat.nodes.values()) {
-    if (node.kind === 'assistant-step') continue
-    if (node.anchorSeq < anchor && node.anchorSeq > nearestSeq) {
-      nearestSeq = node.anchorSeq
-      nearestKind = node.kind
+    if (node.kind !== 'user') continue
+    if (node.anchorSeq < anchor) {
+      if (node.anchorSeq > prevUser) prevUser = node.anchorSeq
+    } else if (node.anchorSeq > anchor) {
+      if (node.anchorSeq < nextUser) nextUser = node.anchorSeq
     }
   }
-  return nearestKind === 'user'
+  for (const node of snapshot.chat.nodes.values()) {
+    if (node.kind !== 'tool-call') continue
+    if (node.anchorSeq > prevUser && node.anchorSeq < nextUser) return false // agent working turn
+  }
+  return true
 }
 
 /** Full props: framework runtime share + `voice` locale seat + injected face. */
@@ -252,7 +259,7 @@ export const ReplySpeakerMount = memo(function ReplySpeakerMount({
         }
       }
       for (const { node, data } of perTurnClosing.values()) {
-        if (!isChatReply(snapshot, node.anchorSeq)) continue // agent working output
+        if (!isPlainChatTurn(snapshot, node.anchorSeq)) continue // agent working turn
         if (node.anchorSeq <= baselineRef.current) continue
         if (node.anchorSeq === skipAnchorRef.current) continue
         if (dhSentRef.current.has(node.key)) continue

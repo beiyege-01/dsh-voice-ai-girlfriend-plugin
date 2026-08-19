@@ -44,24 +44,30 @@ function nodeText(data: AssistantChatData): string {
 }
 
 /**
- * Whether an assistant node is a plain chat reply: the nearest PRECEDING
- * non-assistant node must be a USER node. Replies following a tool-call are
- * agent working output and never get voiced to QQ.
+ * Whether an assistant node belongs to a plain chat TURN: a turn runs from
+ * one USER node to the next; if ANY tool-call falls inside that interval the
+ * whole turn is agent work (pre-tool preamble, post-tool summary) and never
+ * gets voiced to QQ. A turn with no tool-call is a plain chat reply.
  */
-function isChatReply(
+function isPlainChatTurn(
   snapshot: { chat: { nodes: { values(): readonly { kind: string; anchorSeq: number }[] } } },
   anchor: number,
 ): boolean {
-  let nearestSeq = -1
-  let nearestKind = ''
+  let prevUser = -1
+  let nextUser = Infinity
   for (const node of snapshot.chat.nodes.values()) {
-    if (node.kind === 'assistant-step') continue
-    if (node.anchorSeq < anchor && node.anchorSeq > nearestSeq) {
-      nearestSeq = node.anchorSeq
-      nearestKind = node.kind
+    if (node.kind !== 'user') continue
+    if (node.anchorSeq < anchor) {
+      if (node.anchorSeq > prevUser) prevUser = node.anchorSeq
+    } else if (node.anchorSeq > anchor) {
+      if (node.anchorSeq < nextUser) nextUser = node.anchorSeq
     }
   }
-  return nearestKind === 'user'
+  for (const node of snapshot.chat.nodes.values()) {
+    if (node.kind !== 'tool-call') continue
+    if (node.anchorSeq > prevUser && node.anchorSeq < nextUser) return false // agent working turn
+  }
+  return true
 }
 
 /**
@@ -123,7 +129,7 @@ export const QQBridge = memo(function QQBridge({ useSession, sendText }: QQBridg
       }
     }
     if (newest === null) return
-    if (!isChatReply(snapshot, newest.anchor)) return // agent working output — no QQ voice
+    if (!isPlainChatTurn(snapshot, newest.anchor)) return // agent working turn — no QQ voice
     if (newest.anchor > lastReplyAnchorRef.current) {
       lastReplyAnchorRef.current = newest.anchor
       const text = newest.text.trim()
