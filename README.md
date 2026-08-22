@@ -21,6 +21,7 @@ dsh plugin --profile web add github:beiyege-01/dsh-voice-ai-girlfriend-plugin
 - ⚡ **插话/排队**：亮=说话打断回复；灭=回复读完句子排队接上
 - 👧 **数字人窗口**：右侧动画窗（空闲/说话视频，素材自备）
 - 💬 **QQ 双向**：QQ 消息注入对话 + 回复文本/语音/图片推送（NapCat）
+- 🎭 **三类预设一键切换**：工具行三个按钮分别循环切换 **TTS 音色 / 数字人形象 / 待机动画**，选择自动记忆（localStorage）。音色（`voices/<名字>/`）、待机（`assets/bg-images/<名字>/`）、形象（共享卷 temp 放 mp4）均可自行添加，无需改代码
 
 ## 使用前提
 
