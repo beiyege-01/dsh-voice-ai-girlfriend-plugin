@@ -2,12 +2,13 @@
 // client plugin artifact (lib/client.js, __ModuleLoader__ closure). All
 // @deepseek-ai / react imports stay external — the DSH host provides them.
 //
-// CSS modules: dsh (rc.8 and 0.1.3 alike) does NOT auto-load css sidecars.
-// Every client plugin must inject its own <style data-plugin data-plugin-css>
-// tags (hashed class names). This build therefore compiles *.module.css into
-// (a) a local->hashed class map for the TSX and (b) an injected <style> per css
-// module. A server/node entry (lib/index.js) is also emitted so the dsh loader
-// can import the profile entry on rc.8 and 0.1.3.
+// CSS modules: dsh (rc.8, 0.1.3 and the 0.2.x web plugin system alike) does NOT
+// auto-load css sidecars. Every client plugin must inject its own <style
+// data-plugin data-plugin-css> tags (hashed class names). This build therefore
+// compiles *.module.css into (a) a local->hashed class map for the TSX and (b)
+// an injected <style> per css module. A server/node entry (lib/index.js) is also
+// emitted so the dsh loader can import the profile entry on every supported
+// release.
 import { build } from 'esbuild'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
