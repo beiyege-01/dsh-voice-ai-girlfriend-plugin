@@ -102,37 +102,54 @@
   50% { height: 3px; opacity: 1; }
 }
 
-/* ── Recognizing: STT in flight (rounded-rect ring that sweeps) ──────────
-   不能只染 border-top：圆角矩形的「上边」只是短短一段，转起来像一条横线。
-   这里用 conic-gradient + mask 画出 2px 的环形描边，再整体旋转，弧段就会
-   沿着圆角矩形跑。 */
+/* ── Recognizing: STT in flight（向外扩散的声波环，不旋转）──────────────
+   旋转的描边在方按钮上机械感重、也不符合「把声音送出去」这件事。
+   改成两个同形状的光环依次向外扩散淡出，像声波辐射。 */
 .mic.transcribing {
   color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000);
 }
 
-.mic.transcribing::before {
+.mic.transcribing::before,
+.mic.transcribing::after {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: 12px;
-  padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0turn 0.62turn,
-    color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000) 0.8turn,
-    transparent 0.94turn
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0.95;
+  inset: -1px;
+  border-radius: 10px;
+  border: 1.5px solid color-mix(in srgb, var(--dsw-alias-state-success-primary) 70%, #000);
+  opacity: 0;
   pointer-events: none;
-  animation: mic-spin 0.9s linear infinite;
+  animation: mic-ripple 1.5s ease-out infinite;
+}
+
+/* 第二圈错开半个周期，形成连续的脉冲感 */
+.mic.transcribing::after {
+  animation-delay: 0.75s;
+}
+
+@keyframes mic-ripple {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  65% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic.transcribing::before,
+  .mic.transcribing::after {
+    animation: none;
+    transform: none;
+    opacity: 0.5;
+  }
+  .mic.transcribing::after {
+    display: none;
+  }
 }
 
 @keyframes mic-spin {
