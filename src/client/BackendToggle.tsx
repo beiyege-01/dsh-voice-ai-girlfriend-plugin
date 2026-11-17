@@ -15,7 +15,7 @@ import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { VoiceInjected } from './contract.ts'
 import { STT_BACKEND_EVENT, sttBackendGet, sttBackendSet } from './bridge.ts'
-import { chipStyle, chipKey } from './chip.ts'
+import { chipKey } from './chip.ts'
 import chips from './chips.css'
 
 const CLOUD_BACKEND = 'deepseek'
@@ -82,9 +82,8 @@ export const BackendToggle = memo(function BackendToggle({ t }: BackendTogglePro
   if (backend === null) return null
 
   const on = backend === CLOUD_BACKEND
-  const hint = on
-    ? t('stt.onHint')
-    : t('stt.offHint')
+  const hint = on ? t('stt.onHint') : t('stt.offHint')
+  const prim = 'var(--dsw-alias-state-business-primary)'
 
   return (
     <span
@@ -94,11 +93,34 @@ export const BackendToggle = memo(function BackendToggle({ t }: BackendTogglePro
       title={hint}
       aria-label={hint}
       aria-pressed={on}
-      style={{ ...chipStyle(on), opacity: busy ? 0.5 : 1 }}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        height: 30,
+        padding: '0 9px',
+        borderRadius: 999,
+        cursor: 'pointer',
+        margin: '0 4px',
+        flex: '0 0 auto',
+        opacity: busy ? 0.5 : 1,
+        background: on
+          ? `color-mix(in srgb, ${prim} 22%, transparent)`
+          : 'rgba(127,127,127,0.14)',
+        color: on ? prim : 'var(--dsw-alias-label-dimmed)',
+        boxShadow: on
+          ? `inset 0 0 0 1px color-mix(in srgb, ${prim} 62%, transparent)`
+          : 'inset 0 0 0 1px rgba(127,127,127,0.18)',
+        transition: 'color .2s ease, background .2s ease, box-shadow .2s ease',
+        fontSize: 12,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
       onClick={toggle}
       onKeyDown={chipKey}
     >
       {on ? <CloudIcon /> : <ChipIcon />}
+      <span>{on ? t('stt.cloudLabel') : t('stt.localLabel')}</span>
     </span>
   )
 })
