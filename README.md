@@ -19,10 +19,19 @@ DeepSeek Harness 的**浏览器语音插件**：麦克风语音输入、回复�
 | **DSH（主用）** | `dsh 0.2.1-rc.2` / profile `web-v021`（端口 3092） | ✅ 2026-10-25 实测通过 |
 | **DSH（兼容）** | `dsh 0.1.3-alpha.1` / profile `web-v013`（端口 3080） | ✅ 2026-09-14 实测通过 |
 | **DSH（旧版）** | `rc.8` / profile `web` | 用插件 `v0.3.0`；`v0.4.0` 声明 `engines.dsh >=0.1.3-alpha.1` |
-| 本插件 | `@beiyege-01/dsh-voice-ai-girlfriend` **`v0.4.0`** | 构建：`node build.mjs` → `lib/client.js` |
+| 本插件 | `@beiyege-01/dsh-voice-ai-girlfriend` **`v0.5.0`** | 构建：`node build.mjs` → `lib/client.js` |
 | 语音桥接 | `voice_bridge.py`（FastAPI/uvicorn `:8765`，Python 3.14 venv） | 配套主仓库 |
-| TTS 引擎 | OmniVoice（WSL2 + FlashInfer `:9877`） | 音色全部为 OmniVoice 克隆 |
+| TTS 引擎 | **OmniVoice**（WSL2 + FlashInfer `:9877`）/ **DeepSeek 官方 TTS**（云端，可选） | 音色列表里逐条切换 |
+| ASR 引擎 | **FunASR**（本机 GPU）/ **DeepSeek 官方 ASR**（云端，可选） | 工具行开关切换 |
 | 数字人 | DUIX `guiji2025/duix.avatar-5090:trt10.9`（宿主 `:9000`） | 冷启动 1-3 分钟 |
+
+> **`v0.5.0` 变更（DeepSeek 官方语音接入）**
+> - **识别引擎可切换**：工具行新增一个芯片按钮（云朵 = 官方云端 ASR / 芯片 = 本机 FunASR），点击即切，**运行时生效并写回桥的配置**，不用重启语音桥。状态由桥的 `/api/stt/backend` 提供，不是浏览器本地存储，换标签页/重开 DSH 都一致。
+> - **官方 TTS 音色**：新增 `deepseek-stella`（官方·海星，女声）和 `deepseek-tide`（官方·暗潮，男声）两条音色，出现在原有音色列表里——选它们走云端合成，选其它回本地 OmniVoice，互不影响。
+> - **音色选择改成弹出面板**：原来是点击轮转，音色一多要点十几次。现在点音色胶囊向上弹出可滚动列表，当前项高亮打勾、打开自动滚到可见、点外部或 Esc 关闭、带弹入/淡出动画（遵循 `prefers-reduced-motion`）。
+> - **修 `DhStatus` 类型缺口**：`companion.tsx` 一直在读 `status.duix`，但接口里没这个字段，补上（另补 `stats`）。
+>
+> 官方接口细节（端点、限制、计费、踩过的坑）见主仓库 `DEEPSEEK-语音接入.md`。
 
 > **`v0.4.0` 变更**
 > - **适配 DSH 0.2.1-rc.2**：在官方 0.2.x Web 插件系统上完成加载、槽位、聊天读取、桥接调用全链路实测。
@@ -50,12 +59,12 @@ dsh plugin --profile <profile> add github:beiyege-01/dsh-voice-ai-girlfriend-plu
 
 ## 功能
 
-- 🎙️ **语音输入**：麦克风 → 桥接 FunASR 中文识别 → 注入对话（连续聆听、自动端点）
-- 🔊 **语音回复**：回复流式 TTS 朗读（OmniVoice 声音克隆，跑在 WSL2 + FlashInfer 加速，音色由参考音频决定，支持 600+ 语言）
-- ⚡ **插话/排队**：亮=说话打断回复；灭=回复读完句子排队接上
+- 🎙️ **语音输入**：麦克风 → 桥接识别 → 注入对话（连续聆听、自动端点）。**识别引擎可切**：本机 FunASR（免费离线、占显存）或 **DeepSeek 官方 ASR**（云端、不占显存、按音频时长计费）
+- 🔊 **语音回复**：回复流式 TTS 朗读，两种引擎可选——**OmniVoice 声音克隆**（本地 WSL2 + FlashInfer，音色由参考音频决定）或 **DeepSeek 官方 TTS**（云端固定音色 `stella` / `tide`，需联网）
+- ⚡ **插话/排队**：亮=说话打断回复；灭=回复读完句子排队接上。打断检测走本地 silero VAD，**与识别引擎无关**，切云端照样灵敏
 - 👧 **数字人窗口**：右侧动画窗（空闲/说话视频，素材自备），自动贴右侧插件边缘不被遮挡
 - 💬 **QQ 双向**：QQ 消息注入对话 + 回复文本/语音/图片推送（NapCat）
-- 🎭 **三类预设一键切换**：工具行三个按钮分别循环切换 **TTS 音色 / 数字人形象 / 待机动画**，选择自动记忆（localStorage）。音色（`voices/<名字>/`）、待机（`assets/bg-images/<名字>/`）、形象（共享卷 temp 放 mp4）均可自行添加，无需改代码
+- 🎭 **预设一键切换**：**TTS 音色**（弹出面板，可滚动选，含官方音色）/ **数字人形象** / **待机动画**（后两个点击轮转）。音色（`voices/<名字>/`）、待机（`assets/bg-images/<名字>/`）、形象（共享卷 temp 放 mp4）均可自行添加，无需改代码
 - 💰 **余额 pill**：composer 底部统计行显示 DeepSeek 余额（点击刷新，10 分钟缓存）
 
 ## 使用前提

@@ -20,8 +20,11 @@ export const zh = {
   'balance.errHint': '余额查询失败，点击重试',
   'balance.loading': '余额加载中…',
   'persona.voiceHint': 'TTS 音色（说话的声音）',
+  'persona.voiceTitle': '选择音色',
   'persona.avatarHint': '数字人形象（说话的样子）',
   'persona.idleHint': '待机动画（发呆时的背景）',
+  'stt.onHint': '识别引擎：官方云端 ASR（不占显存，需联网，按音频时长计费）。点击切换为本机模型',
+  'stt.offHint': '识别引擎：本机模型（免费离线，占显存，首次说话要加载）。点击切换为官方云端',
 } satisfies Record<string, string>
 
 /** The voice namespace key union. */
@@ -47,6 +50,9 @@ export const en = {
   'balance.errHint': 'Balance query failed, click to retry',
   'balance.loading': 'Loading balance…',
   'persona.voiceHint': 'TTS voice (the speaking voice)',
+  'persona.voiceTitle': 'Choose a voice',
   'persona.avatarHint': 'Digital-human avatar (the speaking look)',
   'persona.idleHint': 'Idle animation (the background while resting)',
+  'stt.onHint': 'Recognition: official cloud ASR (no VRAM, needs network, billed per audio duration). Click for local model',
+  'stt.offHint': 'Recognition: local model (free, offline, uses VRAM, first use loads it). Click for official cloud',
 } satisfies Record<VoiceKey, string>

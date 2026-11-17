@@ -1,0 +1,117 @@
+/* VoicePicker: 音色下拉面板（点击音色胶囊弹出，可滚动） */
+
+.wrap {
+  position: relative;
+  display: inline-flex;
+  margin: 0 5px;
+}
+
+.panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 60;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-elevated, #23232a);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(127, 127, 127, 0.22);
+  transform-origin: bottom center;
+  animation: pop 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.panelClosing {
+  animation: fade 0.1s ease-in forwards;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes fade {
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) scale(0.97);
+  }
+}
+
+.header {
+  padding: 6px 10px 8px;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  opacity: 0.55;
+  user-select: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.item:hover {
+  background: rgba(127, 127, 127, 0.16);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -2px;
+}
+
+.current {
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);
+  color: var(--dsw-alias-state-business-primary);
+  font-weight: 600;
+}
+
+.check {
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+/* 滚动条：细、半透明，避免抢视觉 */
+.panel::-webkit-scrollbar {
+  width: 8px;
+}
+.panel::-webkit-scrollbar-thumb {
+  background: rgba(127, 127, 127, 0.35);
+  border-radius: 4px;
+}
+.panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .item {
+    animation: none;
+    transition: none;
+  }
+}

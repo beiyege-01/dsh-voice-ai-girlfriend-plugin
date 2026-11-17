@@ -18,6 +18,7 @@ import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { bridgeBase } from './bridge.ts'
 import type { VoiceInjected } from './contract.ts'
+import { VoicePicker } from './VoicePicker.tsx'
 import chips from './chips.css'
 
 const PERSIST = {
@@ -137,6 +138,25 @@ export const PersonaToggle = memo(function PersonaToggle({ t }: PropsRuntime<'co
       .catch(err => console.error('[ui-voice] persona restore failed:', err))
   }, [applied, state])
 
+  const switchTo = useCallback((kind: Kind, name: string) => {
+    if (state === null) return
+    if (name === state.current[KIND_META[kind].key]) return
+    writeSaved(PERSIST[kind], name)
+    void fetch(`${bridgeBase()}/api/persona/set`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [kind]: name }),
+    })
+      .then(() => fetch(`${bridgeBase()}/api/persona/list`).then(r => r.json() as Promise<PersonaState>))
+      .then((s) => {
+        if (!aliveRef.current) return
+        setState(s)
+        // 通知 companion 立即刷新待机动画（不等 30s 轮询）。
+        window.dispatchEvent(new CustomEvent('dsh-voice:persona', { detail: { kind, name } }))
+      })
+      .catch(err => console.error(`[ui-voice] persona ${kind} switch failed:`, err))
+  }, [state])
+
   const cycle = useCallback((kind: Kind) => {
     if (state === null) return
     const meta = KIND_META[kind]
@@ -146,22 +166,8 @@ export const PersonaToggle = memo(function PersonaToggle({ t }: PropsRuntime<'co
     const idx = list.findIndex(x => x.name === current)
     const next = list[(idx + 1) % list.length]
     if (next === undefined) return
-    const patch = { [kind]: next.name }
-    writeSaved(PERSIST[kind], next.name)
-    void fetch(`${bridgeBase()}/api/persona/set`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    })
-      .then(() => fetch(`${bridgeBase()}/api/persona/list`).then(r => r.json() as Promise<PersonaState>))
-      .then((s) => {
-        if (!aliveRef.current) return
-        setState(s)
-        // 通知 companion 立即刷新待机动画（不等 30s 轮询）。
-        window.dispatchEvent(new CustomEvent('dsh-voice:persona', { detail: { kind, name: next.name } }))
-      })
-      .catch(err => console.error(`[ui-voice] persona ${kind} switch failed:`, err))
-  }, [state])
+    switchTo(kind, next.name)
+  }, [state, switchTo])
 
   if (state === null) return null
 
@@ -216,7 +222,15 @@ export const PersonaToggle = memo(function PersonaToggle({ t }: PropsRuntime<'co
 
   return (
     <>
-      {pill('voice', voiceLabel, currentVoice)}
+      <VoicePicker
+        current={currentVoice}
+        currentLabel={voiceLabel}
+        options={state.voices}
+        onSelect={(name) => switchTo('voice', name)}
+        hint={t('persona.voiceHint')}
+        title={t('persona.voiceTitle')}
+        icon={VoiceIcon}
+      />
       {pill('avatar', avatarLabelText, currentAvatar)}
       {pill('idle', idleLabel, currentIdle)}
     </>

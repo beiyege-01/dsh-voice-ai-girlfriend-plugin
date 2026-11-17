@@ -79,6 +79,23 @@ export interface DhStatus {
   text: string
   pending: number
   updated_at: number
+  /** DUIX 容器的探活状态（桥在 DH 开启时返回；关闭时可能缺省）。 */
+  duix?: {
+    container: string
+    state: string
+    message: string
+    checked_at: number
+  }
+  /** DH 提交/丢弃的累计计数（诊断用，桥较新版本才返回）。 */
+  stats?: {
+    submits: number
+    rejected: number
+    last_submit_at: number
+    last_reject: string
+    segment_submits: number
+    status_polls: number
+    last_poll_at: number
+  }
 }
 
 /**
@@ -164,6 +181,55 @@ export function notifyDhChanged(): void {
     window.dispatchEvent(new Event(DH_CHANGE_EVENT))
   } catch {
     // no window (non-browser context) — nothing to notify
+  }
+}
+
+// ── 识别后端（本机 / 官方云端）────────────────────────────────────────────
+// 由语音桥的 /api/stt/backend 驱动：deepseek = 官方云端 ASR（不占显存），
+// funasr / whisper = 本机模型。切换立即生效并写回 bridge-config.json。
+export interface SttBackendInfo {
+  backend: string
+  available: string[]
+}
+
+/** 识别后端变化事件（工具栏各处同步用）。 */
+export const STT_BACKEND_EVENT = 'dsh-voice:stt-backend-change'
+
+/** 读当前识别后端；桥不可达时返回 null。 */
+export async function sttBackendGet(): Promise<SttBackendInfo | null> {
+  try {
+    const resp = await fetch(`${bridgeBase()}/api/stt/backend`)
+    if (!resp.ok) return null
+    return (await resp.json()) as SttBackendInfo
+  } catch {
+    return null
+  }
+}
+
+/** 切换识别后端；成功返回新状态，失败返回 null。 */
+export async function sttBackendSet(backend: string): Promise<SttBackendInfo | null> {
+  try {
+    const resp = await fetch(`${bridgeBase()}/api/stt/backend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backend }),
+    })
+    if (!resp.ok) return null
+    const json = (await resp.json()) as SttBackendInfo & { ok?: boolean }
+    notifySttBackendChanged()
+    return json
+  } catch (err) {
+    console.error('[ui-voice] stt backend switch failed:', err)
+    return null
+  }
+}
+
+/** 广播识别后端变化。 */
+export function notifySttBackendChanged(): void {
+  try {
+    window.dispatchEvent(new Event(STT_BACKEND_EVENT))
+  } catch {
+    // no window — nothing to notify
   }
 }
 

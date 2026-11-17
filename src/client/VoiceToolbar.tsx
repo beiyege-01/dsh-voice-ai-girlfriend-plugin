@@ -23,6 +23,7 @@ import { CompanionToggle } from './CompanionToggle.tsx'
 import { BusyToggle } from './BusyToggle.tsx'
 import { BridgeStatus } from './BridgeStatus.tsx'
 import { PersonaToggle } from './PersonaToggle.tsx'
+import { BackendToggle } from './BackendToggle.tsx'
 
 /** Full props: composer.dock runtime share + `voice` locale seat + injected face. */
 export type VoiceToolbarProps =
@@ -43,6 +44,7 @@ export const VoiceToolbar = memo(function VoiceToolbar(props: VoiceToolbarProps)
   const busyProps = props as unknown as React.ComponentProps<typeof BusyToggle>
   const bridgeProps = props as unknown as React.ComponentProps<typeof BridgeStatus>
   const personaProps = props as unknown as React.ComponentProps<typeof PersonaToggle>
+  const backendProps = props as unknown as React.ComponentProps<typeof BackendToggle>
   return (
     <div
       style={{
@@ -56,6 +58,7 @@ export const VoiceToolbar = memo(function VoiceToolbar(props: VoiceToolbarProps)
     >
       <BridgeStatus {...bridgeProps} />
       <PersonaToggle {...personaProps} />
+      <BackendToggle {...backendProps} />
       <MicButton {...micProps} />
       <VoiceToggle {...voiceProps} />
       <DigitalHumanToggle {...dhProps} />
