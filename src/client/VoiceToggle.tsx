@@ -64,6 +64,19 @@ export const VoiceToggle = memo(function VoiceToggle({ t, speaker, abortTts }: V
     })
   }, [speaker, abortTts])
 
+  // 朗读中把喇叭整个染成绿色（和麦克风收音同色），而不是只有一层淡光晕。
+  // chipStyle 是行内样式、优先级最高，所以这里必须用行内覆盖。
+  const green = 'var(--dsw-alias-state-success-primary)'
+  const baseStyle = chipStyle(on)
+  const style = speaking
+    ? {
+        ...baseStyle,
+        color: green,
+        background: `color-mix(in srgb, ${green} 22%, transparent)`,
+        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${green} 62%, transparent)`,
+      }
+    : baseStyle
+
   return (
     <span
       role="button"
@@ -72,7 +85,7 @@ export const VoiceToggle = memo(function VoiceToggle({ t, speaker, abortTts }: V
       title={on ? t('toggle.offHint') : t('toggle.onHint')}
       aria-label={on ? t('toggle.offHint') : t('toggle.onHint')}
       aria-pressed={on}
-      style={chipStyle(on)}
+      style={style}
       onClick={toggle}
       onKeyDown={chipKey}
     >

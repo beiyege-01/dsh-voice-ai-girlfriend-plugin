@@ -54,14 +54,22 @@
   50% { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5)); }
 }
 
-/* TTS playing: a smooth sound-wave ripple. */
+/* TTS playing: 和麦克风收音同色系的绿色脉冲——喇叭在出声时就是绿的，
+   一眼能看出「现在正在朗读」。 */
 .playing {
   animation: wave 1.4s ease-in-out infinite;
 }
 
 @keyframes wave {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(103, 158, 254, 0.2)); }
-  50% { transform: scale(1.07); filter: drop-shadow(0 0 9px rgba(103, 158, 254, 0.6)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.2)); }
+  50% { transform: scale(1.07); filter: drop-shadow(0 0 9px rgba(34, 197, 94, 0.6)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playing {
+    animation: none;
+    filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.5));
+  }
 }
 
 /* Digital-human task running: a periodic GREEN glow ring (breathing + halo).
