@@ -102,7 +102,10 @@
   50% { height: 3px; opacity: 1; }
 }
 
-/* ── Recognizing: STT in flight (deep green spinning ring) ── */
+/* ── Recognizing: STT in flight (rounded-rect ring that sweeps) ──────────
+   不能只染 border-top：圆角矩形的「上边」只是短短一段，转起来像一条横线。
+   这里用 conic-gradient + mask 画出 2px 的环形描边，再整体旋转，弧段就会
+   沿着圆角矩形跑。 */
 .mic.transcribing {
   color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000);
 }
@@ -110,15 +113,26 @@
 .mic.transcribing::before {
   content: '';
   position: absolute;
-  /* 外扩 3px，所以圆角要跟着按钮走：按钮 30×30/9px，这里 36×36 → 9+3=12px。
-     用 50% 会变成正圆，和圆角矩形按钮对不上。 */
   inset: -3px;
   border-radius: 12px;
-  border: 2px solid transparent;
-  border-top-color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000);
-  opacity: 0.9;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.62turn,
+    color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000) 0.8turn,
+    transparent 0.94turn
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.95;
   pointer-events: none;
-  animation: mic-spin 0.8s linear infinite;
+  animation: mic-spin 0.9s linear infinite;
 }
 
 @keyframes mic-spin {
