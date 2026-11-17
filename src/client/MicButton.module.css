@@ -110,8 +110,10 @@
 .mic.transcribing::before {
   content: '';
   position: absolute;
+  /* 外扩 3px，所以圆角要跟着按钮走：按钮 30×30/9px，这里 36×36 → 9+3=12px。
+     用 50% 会变成正圆，和圆角矩形按钮对不上。 */
   inset: -3px;
-  border-radius: 50%;
+  border-radius: 12px;
   border: 2px solid transparent;
   border-top-color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 62%, #000);
   opacity: 0.9;
