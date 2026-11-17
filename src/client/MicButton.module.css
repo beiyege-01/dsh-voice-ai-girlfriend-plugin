@@ -12,6 +12,21 @@
   color: var(--dsw-alias-label-dimmed);
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease;
+  /* 按钮聚焦时不要出现文本插入符/选区高亮：它是个开关，不是可编辑区域。
+     浏览器在 tabIndex 元素上叠加输入框焦点时可能画出一根闪烁的竖线，
+     看起来就像「多了一个光标」。 */
+  caret-color: transparent;
+  user-select: none;
+}
+
+/* 键盘导航仍要有可见焦点环，但用环而不是光标 */
+.mic:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 1px;
+}
+
+.mic:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .mic:hover {
