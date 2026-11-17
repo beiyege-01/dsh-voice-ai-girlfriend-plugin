@@ -20,6 +20,25 @@ import chips from './chips.css'
 
 const CLOUD_BACKEND = 'deepseek'
 const LOCAL_BACKEND = 'funasr'
+/** 上次确认过的后端，缓存下来保证按钮**首帧就渲染**（不会因为桥暂时没起来而消失）。 */
+const CACHE_KEY = 's2s.voice.sttBackend'
+
+function readCached(): string {
+  try {
+    const v = localStorage.getItem(CACHE_KEY)
+    return v === LOCAL_BACKEND || v === CLOUD_BACKEND ? v : CLOUD_BACKEND
+  } catch {
+    return CLOUD_BACKEND
+  }
+}
+
+function writeCached(v: string): void {
+  try {
+    localStorage.setItem(CACHE_KEY, v)
+  } catch {
+    // 持久化不可用——本次会话内仍然正确
+  }
+}
 
 /** Full toggle props: framework runtime share + `voice` locale seat + injected face. */
 export type BackendToggleProps = PropsRuntime<'conversation.input.left'> & PropsLocale<'voice'> & VoiceInjected
@@ -44,12 +63,20 @@ function ChipIcon() {
 }
 
 export const BackendToggle = memo(function BackendToggle({ t }: BackendToggleProps) {
-  const [backend, setBackend] = useState<string | null>(null)
+  // 初值来自缓存，**永远不是 null**：切换开关必须常驻，不能因为桥暂时不可达而消失。
+  const [backend, setBackend] = useState<string>(readCached)
   const [busy, setBusy] = useState(false)
+  const [offline, setOffline] = useState(false)
 
   const refresh = useCallback(() => {
     void sttBackendGet().then((info) => {
-      if (info !== null) setBackend(info.backend)
+      if (info !== null) {
+        setBackend(info.backend)
+        writeCached(info.backend)
+        setOffline(false)
+      } else {
+        setOffline(true)
+      }
     })
   }, [])
 
@@ -57,29 +84,36 @@ export const BackendToggle = memo(function BackendToggle({ t }: BackendTogglePro
     refresh()
     const onChange = () => refresh()
     window.addEventListener(STT_BACKEND_EVENT, onChange)
-    // 桥可能比页面晚起来：挂载后再补读一次
-    const timer = window.setTimeout(refresh, 3000)
+    // 桥可能比页面晚起来 / 中途重启：定时补读 + 切回页面时补读
+    const timer = window.setInterval(refresh, 10000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       window.removeEventListener(STT_BACKEND_EVENT, onChange)
-      window.clearTimeout(timer)
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [refresh])
 
   const toggle = useCallback(() => {
     if (busy) return
-    const current = backend ?? LOCAL_BACKEND
-    const next = current === CLOUD_BACKEND ? LOCAL_BACKEND : CLOUD_BACKEND
+    const next = backend === CLOUD_BACKEND ? LOCAL_BACKEND : CLOUD_BACKEND
     setBusy(true)
     void sttBackendSet(next)
       .then((info) => {
-        if (info !== null) setBackend(info.backend)
-        else refresh()
+        if (info !== null) {
+          setBackend(info.backend)
+          writeCached(info.backend)
+          setOffline(false)
+        } else {
+          setOffline(true)
+          refresh()
+        }
       })
       .finally(() => setBusy(false))
   }, [backend, busy, refresh])
-
-  // 桥没连上时不显示，避免误导成「已关闭」
-  if (backend === null) return null
 
   const on = backend === CLOUD_BACKEND
   const hint = on ? t('stt.onHint') : t('stt.offHint')
@@ -90,7 +124,7 @@ export const BackendToggle = memo(function BackendToggle({ t }: BackendTogglePro
       role="button"
       tabIndex={0}
       className={[chips.chip, on ? chips.on : ''].join(' ')}
-      title={hint}
+      title={offline ? `${hint}（语音桥未连接，显示的是上次状态）` : hint}
       aria-label={hint}
       aria-pressed={on}
       style={{
@@ -103,7 +137,7 @@ export const BackendToggle = memo(function BackendToggle({ t }: BackendTogglePro
         cursor: 'pointer',
         margin: '0 4px',
         flex: '0 0 auto',
-        opacity: busy ? 0.5 : 1,
+        opacity: busy || offline ? 0.55 : 1,
         background: on
           ? `color-mix(in srgb, ${prim} 22%, transparent)`
           : 'rgba(127,127,127,0.14)',
